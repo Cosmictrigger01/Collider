@@ -24,6 +24,33 @@ class Player:
     def move_hitbox(self):
         self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
 
+    def playerMovement(self, dt):
+        #global keys
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            if self.pos.y - 300 * dt - self.size > 0:
+                self.pos.y -= 300 * dt
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            if self.pos.y + 300 * dt + self.size < screen.get_height():
+                self.pos.y += 300 * dt
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            if self.pos.x - 300 * dt - self.size > 0:
+                self.pos.x -= 300 * dt
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            if self.pos.x + 300 * dt + self.size < screen.get_width():
+                self.pos.x += 300 * dt
+
+
+class Buff:
+    def __init__(self):
+        self.size = 20
+        self.pos = pygame.Vector2(randint(0, screen.get_width()), randint(0, screen.get_height()))
+        self.hitbox = pygame.Rect(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
+        self.color = "green"
+    def draw(self):
+        pygame.draw.rect(screen, self.color, self.hitbox, self.size)
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((1920,1080))
@@ -35,7 +62,7 @@ dt = 0
 font = pygame.font.Font(None, 40)
 #player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 #size = 40
-enemies = [Enemy()]
+
 timer = 0
 score = 0
 selection = 1
@@ -69,13 +96,17 @@ while menu:
         if selection == 1:
             #Creation of player object upon selecting start
             playerObject = Player()
+            enemies = [Enemy()]
             menu = False
         if selection == 2:
             running = False
             menu = False
     pygame.display.flip()
     clock.tick(60)
-    
+
+
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -86,25 +117,12 @@ while running:
     #pygame.draw.rect(screen, "white", playerObject.hitbox, playerObject.size)
     playerObject.move_hitbox()
     playerObject.draw()
+
     for e in enemies:
         e.move_hitbox()
         e.draw()
-        
 
-
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] or keys[pygame.K_UP]:
-        if playerObject.pos.y - 300 * dt - playerObject.size > 0 :
-            playerObject.pos.y -= 300 * dt
-    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-        if playerObject.pos.y + 300 * dt + playerObject.size < screen.get_height():
-            playerObject.pos.y += 300 * dt
-    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-        if playerObject.pos.x - 300 * dt - playerObject.size > 0:
-            playerObject.pos.x -= 300 * dt
-    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-        if playerObject.pos.x + 300 * dt + playerObject.size < screen.get_width():
-            playerObject.pos.x += 300 * dt
+    playerObject.playerMovement(dt)
 
     colliders = []
     for e in enemies:
