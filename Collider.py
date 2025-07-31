@@ -70,8 +70,9 @@ while running:
     player_hitbox = pygame.Rect(player_pos.x - size, player_pos.y - size, size * 2, size * 2)
     pygame.draw.rect(screen, "white", player_hitbox, size)
     for e in enemies:
-        e.draw()
         e.move_hitbox()
+        e.draw()
+        
 
 
     keys = pygame.key.get_pressed()
