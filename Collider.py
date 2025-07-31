@@ -126,7 +126,7 @@ while running:
 
     colliders = []
     for e in enemies:
-        if e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+        if coll:= e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
             if e.pos.x > playerObject.pos.x:
                 e.pos.x -= 100 * dt
             if e.pos.x < playerObject.pos.x:
@@ -136,7 +136,7 @@ while running:
             if e.pos.y < playerObject.pos.y:
                 e.pos.y += 100 * dt
         else:
-            colliders.append(enemies[e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox])])
+            colliders.append(enemies[coll])
             colliders.append(e)
 
         if playerObject.hitbox.colliderect(e.hitbox):
