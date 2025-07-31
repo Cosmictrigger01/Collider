@@ -1,5 +1,6 @@
 import pygame
 from random import randint
+import pickle
 class Enemy:
     def __init__(self):
         self.size = 40
@@ -51,110 +52,137 @@ class Buff:
         pygame.draw.rect(screen, self.color, self.hitbox, self.size)
 
 
+class Progress():
+    def __init__(self):
+        self.points = 0
+        self.unlocks = []
+
 
 pygame.init()
 screen = pygame.display.set_mode((1920,1080))
 clock = pygame.time.Clock()
-running = True
-menu = True
-dt = 0
 
-font = pygame.font.Font(None, 40)
 #player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 #size = 40
-
-timer = 0
-score = 0
-selection = 1
-
-while menu:
-    for even in pygame.event.get():
-        if even.type == pygame.QUIT:
-            running = False
-            menu = False
+def load():
+    try:
+        with open("progress.pkl", "rb") as infile:
+            progress = pickle.load(infile)
+            return progress
+    except:
+        progress = Progress()
+        return progress
     
-    screen.fill("blue")
-    options = {1: "Play",
-               2: "Exit"}
-    offset = 0
-    for num, option in options.items():
-        if selection == num:
-            text = font.render(option, False, "red")
-        else:
-            text = font.render(option, False, "white")
-        screen.blit(text, (screen.get_width() / 2, screen.get_height() / 2 + offset))
-        offset += 100
-    
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] or keys[pygame.K_UP]:
-        if selection > min(options.keys()):
-            selection -= 1
-    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-        if selection < max(options.keys()):
-            selection += 1
-    if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
-        if selection == 1:
-            #Creation of player object upon selecting start
-            playerObject = Player()
-            enemies = [Enemy()]
-            menu = False
-        if selection == 2:
-            running = False
-            menu = False
-    pygame.display.flip()
-    clock.tick(60)
+def save(progress):
+    with open("progress.pkl", "wb") as outfile:
+        pickle.dump(progress, outfile)
 
+def play(clock):
+    running = True
+    playerObject = Player()
+    enemies = [Enemy()]
+    timer = 0
+    score = 0
+    dt = 0
+    font = pygame.font.Font(None, 40)
 
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill("blue")
 
+        #player_hitbox = pygame.Rect(player_pos.x - size, player_pos.y - size, size * 2, size * 2)
+        #pygame.draw.rect(screen, "white", playerObject.hitbox, playerObject.size)
+        playerObject.move_hitbox()
+        playerObject.draw()
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    screen.fill("blue")
+        for e in enemies:
+            e.move_hitbox()
+            e.draw()
 
-    #player_hitbox = pygame.Rect(player_pos.x - size, player_pos.y - size, size * 2, size * 2)
-    #pygame.draw.rect(screen, "white", playerObject.hitbox, playerObject.size)
-    playerObject.move_hitbox()
-    playerObject.draw()
+        playerObject.playerMovement(dt)
 
-    for e in enemies:
-        e.move_hitbox()
-        e.draw()
+        colliders = []
+        for e in enemies:
+            if coll:= e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+                if e.pos.x > playerObject.pos.x:
+                    e.pos.x -= 100 * dt
+                if e.pos.x < playerObject.pos.x:
+                    e.pos.x += 100 * dt
+                if e.pos.y > playerObject.pos.y:
+                    e.pos.y -= 100 * dt
+                if e.pos.y < playerObject.pos.y:
+                    e.pos.y += 100 * dt
+            else:
+                colliders.append(enemies[coll])
+                colliders.append(e)
 
-    playerObject.playerMovement(dt)
+            if playerObject.hitbox.colliderect(e.hitbox):
+                running = False
 
-    colliders = []
-    for e in enemies:
-        if coll:= e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
-            if e.pos.x > playerObject.pos.x:
-                e.pos.x -= 100 * dt
-            if e.pos.x < playerObject.pos.x:
-                e.pos.x += 100 * dt
-            if e.pos.y > playerObject.pos.y:
-                e.pos.y -= 100 * dt
-            if e.pos.y < playerObject.pos.y:
-                e.pos.y += 100 * dt
-        else:
-            colliders.append(enemies[coll])
-            colliders.append(e)
-
-        if playerObject.hitbox.colliderect(e.hitbox):
-            running = False
-
-    for c in colliders:
-        if c in enemies:
-            score += c.reward
-            enemies.remove(c)
-            
-    text = font.render(f"Score: {score}",False,"white")
-    screen.blit(text,(screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
-    pygame.display.flip()
-    timer += 1
-    if timer % 100 == 0:
-        enemies.append(Enemy())
-        while enemies[-1].hitbox.colliderect(playerObject.hitbox) or enemies[-1].hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
-            enemies.pop()
+        for c in colliders:
+            if c in enemies:
+                score += c.reward
+                enemies.remove(c)
+                
+        text = font.render(f"Score: {score}",False,"white")
+        screen.blit(text,(screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
+        pygame.display.flip()
+        timer += 1
+        if timer % 100 == 0:
             enemies.append(Enemy())
-    dt = clock.tick(60) / 1000
+            while enemies[-1].hitbox.colliderect(playerObject.hitbox) or enemies[-1].hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+                enemies.pop()
+                enemies.append(Enemy())
+        dt = clock.tick(60) / 1000
+    return score
+
+def menu(progress, clock):
+    menu = True
+    running = True
+    selection = 1
+    font = pygame.font.Font(None, 40)
+    while menu:
+        for even in pygame.event.get():
+            if even.type == pygame.QUIT:
+                return
+        
+        screen.fill("blue")
+        options = {1: "Play",
+                2: "Exit",
+                3: f"Points: {progress.points}"}
+        offset = 0
+        for num, option in options.items():
+            if selection == num:
+                text = font.render(option, False, "red")
+            else:
+                if selection == 3:
+                    text = font.render(option, False, "white")
+                else:
+                    text = font.render(option, False, "white")
+                
+            screen.blit(text, (screen.get_width() / 2, screen.get_height() / 2 + offset))
+            offset += 100
+            
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            if selection > min(options.keys()):
+                selection -= 1
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            if selection < max(options.keys()):
+                selection += 1
+        if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
+            if selection == 1:
+                #Creation of player object upon selecting start
+                score = play(clock)
+                progress.points += score
+            if selection == 2:
+                save(progress)
+                return
+        pygame.display.flip()
+        clock.tick(60)
+
+menu(load(), clock)
 pygame.quit()
