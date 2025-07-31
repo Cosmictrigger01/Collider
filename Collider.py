@@ -157,10 +157,7 @@ def menu(progress, clock):
             if selection == num:
                 text = font.render(option, False, "red")
             else:
-                if selection == 3:
-                    text = font.render(option, False, "white")
-                else:
-                    text = font.render(option, False, "white")
+                text = font.render(option, False, "white")
                 
             screen.blit(text, (screen.get_width() / 2, screen.get_height() / 2 + offset))
             offset += 100
