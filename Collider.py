@@ -26,7 +26,6 @@ class Player:
         self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
 
     def playerMovement(self, dt):
-        #global keys
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if self.pos.y - 300 * dt - self.size > 0:
@@ -62,8 +61,6 @@ pygame.init()
 screen = pygame.display.set_mode((1920,1080))
 clock = pygame.time.Clock()
 
-#player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-#size = 40
 def load():
     try:
         with open("progress.pkl", "rb") as infile:
@@ -92,8 +89,6 @@ def play(clock):
                 running = False
         screen.fill("blue")
 
-        #player_hitbox = pygame.Rect(player_pos.x - size, player_pos.y - size, size * 2, size * 2)
-        #pygame.draw.rect(screen, "white", playerObject.hitbox, playerObject.size)
         playerObject.move_hitbox()
         playerObject.draw()
 
@@ -105,7 +100,8 @@ def play(clock):
 
         colliders = []
         for e in enemies:
-            if coll:= e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+            coll_index = e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox])
+            if coll_index == -1:
                 if e.pos.x > playerObject.pos.x:
                     e.pos.x -= 100 * dt
                 if e.pos.x < playerObject.pos.x:
@@ -115,7 +111,10 @@ def play(clock):
                 if e.pos.y < playerObject.pos.y:
                     e.pos.y += 100 * dt
             else:
-                colliders.append(enemies[coll])
+                if enemies.index(e) < enemies.index(enemies[coll_index]):
+                    colliders.append(enemies[coll_index + 1])
+                else:
+                    colliders.append(enemies[coll_index])
                 colliders.append(e)
 
             if playerObject.hitbox.colliderect(e.hitbox):
@@ -129,12 +128,14 @@ def play(clock):
         text = font.render(f"Score: {score}",False,"white")
         screen.blit(text,(screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
         pygame.display.flip()
+
         timer += 1
         if timer % 100 == 0:
             enemies.append(Enemy())
             while enemies[-1].hitbox.colliderect(playerObject.hitbox) or enemies[-1].hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
                 enemies.append(Enemy())
+
         dt = clock.tick(60) / 1000
     return score
 
@@ -149,9 +150,11 @@ def menu(progress, clock):
                 return
         
         screen.fill("blue")
+
         options = {1: "Play",
                 2: "Exit",
                 3: f"Points: {progress.points}"}
+        
         offset = 0
         for num, option in options.items():
             if selection == num:
@@ -172,7 +175,6 @@ def menu(progress, clock):
                 selection += 1
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
-                #Creation of player object upon selecting start
                 score = play(clock)
                 progress.points += score
             if selection == 2:
