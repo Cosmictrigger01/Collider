@@ -70,15 +70,10 @@ class Player2(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.rect.y += self.velocity
     def check_collisions(self):
-        if pygame.sprite.spritecollide(self, buff_group, True):
+        if pygame.sprite.spritecollide(self, self.buff_group, True):
             # Handle collision with buffs
             print("Buff collected!")
             # Here you can add logic to increase score or apply buffs
-
-
-
-
-
 
 class Buff(pygame.sprite.Sprite):
     def __init__(self, color):
@@ -94,7 +89,6 @@ class Buff(pygame.sprite.Sprite):
         if self.rect.top > screen.get_height():
             self.kill()
 
-
 class Progress():
     def __init__(self):
         self.points = 0
@@ -104,16 +98,6 @@ pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
 clock = pygame.time.Clock()
 
-# Create a sprite group for buffs
-buff_group = pygame.sprite.Group()
-for i in range(10):  # Create 10 green buffs
-    buff_green = Buff("green")
-    buff_group.add(buff_green)
-
-# Create player group
-player2 = Player2("black", buff_group)
-player_group = pygame.sprite.Group()
-player_group.add(player2)
 
 def load():
     try:
@@ -137,6 +121,18 @@ def play(clock):
     dt = 0
     font = pygame.font.Font(None, 40)
 
+    # Create a sprite group for buffs
+    buff_group = pygame.sprite.Group()
+    for i in range(10):  # Create 10 green buffs
+        buff_green = Buff("green")
+        buff_group.add(buff_green)
+
+    # Create player group
+    player2 = Player2("black", buff_group)
+    player_group = pygame.sprite.Group()
+    player_group.add(player2)
+
+    # Main game loop
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
