@@ -24,6 +24,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (screen.get_width() / 2, screen.get_height() / 2)
         self.velocity = 300
+        self.score = 0
 
         self.buff_group = buff_group
     def update(self, dt):
@@ -50,6 +51,7 @@ class Player(pygame.sprite.Sprite):
             # Handle collision with buffs
             print("Buff collected!")
             # Here you can add logic to increase score or apply buffs
+            self.score += 1
 
 class Buff(pygame.sprite.Sprite):
     def __init__(self, color):
@@ -93,7 +95,6 @@ def play(clock):
     enemies = [Enemy()]
     enemy_spawn_rate = 100 # lower is faster
     timer = 0
-    score = 0
     dt = 0
     font = pygame.font.Font(None, 40)
 
@@ -151,10 +152,10 @@ def play(clock):
 
         for c in colliders:
             if c in enemies:
-                score += c.reward
+                player.score += c.reward
                 enemies.remove(c)
 
-        text = font.render(f"Score: {score}", False, "white")
+        text = font.render(f"Score: {player.score}", False, "white")
         screen.blit(text, (screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
         pygame.display.flip()
         timer += 1
@@ -164,11 +165,11 @@ def play(clock):
                     [x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
                 enemies.append(Enemy())
-            if score % 3 == 0 and enemy_spawn_rate > 10:
+            if player.score % 5 == 0 and enemy_spawn_rate > 10:
                 enemy_spawn_rate -= 1
-            spawned += 1
+
         dt = clock.tick(60) / 1000
-    return score
+    return player.score
 
 def menu(progress, clock):
     menu = True
