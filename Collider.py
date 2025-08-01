@@ -163,7 +163,8 @@ def play(clock):
 
         colliders = []
         for e in enemies:
-            if coll := e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+            coll_index = e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox])
+            if  coll_index == -1:
                 if e.pos.x > playerObject.pos.x:
                     e.pos.x -= 100 * dt
                 if e.pos.x < playerObject.pos.x:
@@ -173,7 +174,10 @@ def play(clock):
                 if e.pos.y < playerObject.pos.y:
                     e.pos.y += 100 * dt
             else:
-                colliders.append(enemies[coll])
+                if enemies.index(e) < enemies.index(enemies[coll_index]):
+                    colliders.append(enemies[coll_index + 1])
+                else:
+                    colliders.append(enemies[coll_index])
                 colliders.append(e)
 
             if playerObject.hitbox.colliderect(e.hitbox):
@@ -208,9 +212,11 @@ def menu(progress, clock):
                 return
 
         screen.fill("blue")
+
         options = {1: "Play",
                    2: "Exit",
                    3: f"Points: {progress.points}"}
+        
         offset = 0
         for num, option in options.items():
             if selection == num:
@@ -230,7 +236,6 @@ def menu(progress, clock):
                 selection += 1
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
-                # Creation of player object upon selecting start
                 score = play(clock)
                 progress.points += score
             if selection == 2:
