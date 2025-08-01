@@ -15,60 +15,36 @@ class Enemy:
     def move_hitbox(self):
         self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
 
-class Player:
-    def __init__(self):
-        self.size = 40
-        self.pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-        self.hitbox = pygame.Rect(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
-        self.color = "white"
-
-    def draw(self):
-        pygame.draw.rect(screen, self.color, self.hitbox, self.size)
-
-    def move_hitbox(self):
-        self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
-
-    def playerMovement(self, dt):
-        # global keys
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
-            if self.pos.y - 300 * dt - self.size > 0:
-                self.pos.y -= 300 * dt
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            if self.pos.y + 300 * dt + self.size < screen.get_height():
-                self.pos.y += 300 * dt
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            if self.pos.x - 300 * dt - self.size > 0:
-                self.pos.x -= 300 * dt
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            if self.pos.x + 300 * dt + self.size < screen.get_width():
-                self.pos.x += 300 * dt
-
-
-class Player2(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):
     def __init__(self, color, buff_group):
         super().__init__()
-        self.image = pygame.Surface((80, 80))
+        self.size = 80
+        self.image = pygame.Surface((self.size, self.size))
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.rect.center = (screen.get_width() / 2, screen.get_height() / 2)
-        self.velocity = 5
+        self.velocity = 300
 
         self.buff_group = buff_group
-    def update(self):
-        self.move()
+    def update(self, dt):
+        self.move(dt)
         self.check_collisions()
 
-    def move(self):
+    def move(self, dt):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.rect.x -= self.velocity
+            if (self.rect.x) - self.velocity * dt > 0:
+                self.rect.x -= self.velocity * dt
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.rect.x += self.velocity
+            if (self.rect.x + self.size) + self.velocity * dt < screen.get_width():
+                self.rect.x += self.velocity * dt
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.rect.y -= self.velocity
+            if (self.rect.y) - self.velocity * dt > 0:
+                self.rect.y -= self.velocity * dt
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.rect.y += self.velocity
+            if (self.rect.y + self.size) + self.velocity * dt < screen.get_height():
+                self.rect.y += self.velocity * dt
+
     def check_collisions(self):
         if pygame.sprite.spritecollide(self, self.buff_group, True):
             # Handle collision with buffs
@@ -114,7 +90,6 @@ def save(progress):
 
 def play(clock):
     running = True
-    playerObject = Player()
     enemies = [Enemy()]
     timer = 0
     score = 0
@@ -128,9 +103,9 @@ def play(clock):
         buff_group.add(buff_green)
 
     # Create player group
-    player2 = Player2("black", buff_group)
+    player = Player("black", buff_group)
     player_group = pygame.sprite.Group()
-    player_group.add(player2)
+    player_group.add(player)
 
     # Main game loop
     while running:
@@ -139,35 +114,29 @@ def play(clock):
                 running = False
         screen.fill("blue")
 
-
-        playerObject.move_hitbox()
-        playerObject.draw()
-
         # Draw and move buffs
         buff_group.update()
         buff_group.draw(screen)
 
         # Draw and move player
-        player_group.update()
+        player_group.update(dt)
         player_group.draw(screen)
 
         for e in enemies:
             e.move_hitbox()
             e.draw()
 
-        playerObject.playerMovement(dt)
-
         colliders = []
         for e in enemies:
             coll_index = e.hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox])
             if  coll_index == -1:
-                if e.pos.x > playerObject.pos.x:
+                if e.pos.x > player.rect.x + player.size / 2:
                     e.pos.x -= 100 * dt
-                if e.pos.x < playerObject.pos.x:
+                if e.pos.x < player.rect.x + player.size / 2:
                     e.pos.x += 100 * dt
-                if e.pos.y > playerObject.pos.y:
+                if e.pos.y > player.rect.y + player.size / 2:
                     e.pos.y -= 100 * dt
-                if e.pos.y < playerObject.pos.y:
+                if e.pos.y < player.rect.y + player.size / 2:
                     e.pos.y += 100 * dt
             else:
                 if enemies.index(e) < enemies.index(enemies[coll_index]):
@@ -176,7 +145,7 @@ def play(clock):
                     colliders.append(enemies[coll_index])
                 colliders.append(e)
 
-            if playerObject.hitbox.colliderect(e.hitbox):
+            if player.rect.colliderect(e.hitbox):
                 running = False
 
         for c in colliders:
@@ -190,7 +159,7 @@ def play(clock):
         timer += 1
         if timer % 100 == 0:
             enemies.append(Enemy())
-            while enemies[-1].hitbox.colliderect(playerObject.hitbox) or enemies[-1].hitbox.collidelist(
+            while enemies[-1].hitbox.colliderect(player.rect) or enemies[-1].hitbox.collidelist(
                     [x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
                 enemies.append(Enemy())
