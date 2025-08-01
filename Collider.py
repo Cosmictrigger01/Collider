@@ -91,6 +91,7 @@ def save(progress):
 def play(clock):
     running = True
     enemies = [Enemy()]
+    enemy_spawn_rate = 100 # lower is faster
     timer = 0
     score = 0
     dt = 0
@@ -157,12 +158,15 @@ def play(clock):
         screen.blit(text, (screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
         pygame.display.flip()
         timer += 1
-        if timer % 100 == 0:
+        if timer % enemy_spawn_rate == 0:
             enemies.append(Enemy())
             while enemies[-1].hitbox.colliderect(player.rect) or enemies[-1].hitbox.collidelist(
                     [x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
                 enemies.append(Enemy())
+            if score % 3 == 0 and enemy_spawn_rate > 10:
+                enemy_spawn_rate -= 1
+            spawned += 1
         dt = clock.tick(60) / 1000
     return score
 
