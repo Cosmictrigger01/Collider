@@ -16,14 +16,14 @@ class Enemy:
         self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, color, buff_group):
+    def __init__(self, progress: "Progress", color, buff_group):
         super().__init__()
-        self.size = 80
+        self.size = progress.size
         self.image = pygame.Surface((self.size, self.size))
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.rect.center = (screen.get_width() / 2, screen.get_height() / 2)
-        self.velocity = 300
+        self.velocity = progress.velocity
         self.score = 0
 
         self.buff_group = buff_group
@@ -70,7 +70,8 @@ class Buff(pygame.sprite.Sprite):
 class Progress():
     def __init__(self):
         self.points = 0
-        self.unlocks = []
+        self.size = 80
+        self.velocity = 300
 
 pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
@@ -90,7 +91,7 @@ def save(progress):
     with open("progress.pkl", "wb") as outfile:
         pickle.dump(progress, outfile)
 
-def play(clock):
+def play(progress, clock):
     running = True
     enemies = [Enemy()]
     enemy_spawn_rate = 100 # lower is faster
@@ -105,7 +106,7 @@ def play(clock):
         buff_group.add(buff_green)
 
     # Create player group
-    player = Player("black", buff_group)
+    player = Player(progress, "black", buff_group)
     player_group = pygame.sprite.Group()
     player_group.add(player)
 
@@ -170,10 +171,10 @@ def play(clock):
 
         dt = clock.tick(60) / 1000
     return player.score
-
+def upgrades(progress):
+    return progress
 def menu(progress, clock):
     menu = True
-    running = True
     selection = 1
     font = pygame.font.Font(None, 40)
     while menu:
@@ -184,8 +185,9 @@ def menu(progress, clock):
         screen.fill("blue")
 
         options = {1: "Play",
-                   2: "Exit",
-                   3: f"Points: {progress.points}"}
+                   2: "Upgrades",
+                   3: "Exit",
+                   4: f"Points: {progress.points}"}
         
         offset = 0
         for num, option in options.items():
@@ -206,11 +208,14 @@ def menu(progress, clock):
                 selection += 1
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
-                score = play(clock)
+                score = play(progress, clock)
                 progress.points += score
             if selection == 2:
+                progress = upgrades(progress)
+            if selection == 3:
                 save(progress)
                 return
+            
         pygame.display.flip()
         clock.tick(60)
 
