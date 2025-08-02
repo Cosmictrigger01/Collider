@@ -1,6 +1,7 @@
 import pygame
 import random
 import pickle
+import time
 class Enemy:
     def __init__(self):
         self.size = 40
@@ -71,7 +72,9 @@ class Progress():
     def __init__(self):
         self.points = 0
         self.size = 80
+        self.size_level = 0
         self.velocity = 300
+        self.vel_level = 0
 
 pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
@@ -171,8 +174,68 @@ def play(progress, clock):
 
         dt = clock.tick(60) / 1000
     return player.score
-def upgrades(progress):
-    return progress
+
+def upgrades(progress: "Progress", clock):
+    upgrades_menu = True
+    selection = 1
+    font = pygame.font.Font(None, 40)
+    while upgrades_menu:
+        for even in pygame.event.get():
+            if even.type == pygame.QUIT:
+                return
+
+        screen.fill("blue")
+
+        options = {1: {"text": "Reduce Size",
+                       "cost": 100,
+                       "change": 10,
+                       "max_level": 5},
+                   2: {"text": "Increase Speed",
+                       "cost": 100,
+                       "change": 25,
+                       "max_level": 5},
+                   3: "Exit",
+                   4: f"Points: {progress.points}"}
+        
+        offset = 0
+        for num, option in options.items():
+            if selection == num and num <= 2:
+                print(option)
+                text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.size_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "red")
+            elif selection != num and num <= 2:
+                print(option)
+                text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.vel_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "white")
+            if selection == num and num > 2:
+                text = font.render(option, False, "red")
+            elif selection != num and num > 2:
+                text = font.render(option, False, "white")
+
+            screen.blit(text, (screen.get_width() / 2, screen.get_height() / 2 + offset))
+            offset += 100
+
+        keys = pygame.key.get_just_released()
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            if selection > min(options.keys()):
+                selection -= 1
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            if selection < max(options.keys()):
+                selection += 1
+        if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
+            if selection == 1:
+                if progress.size_level < 5 and progress.points > options[selection]["cost"]:
+                    progress.size -= options[selection]["change"]
+                    progress.points -= options[selection]["cost"]
+                    progress.size_level += 1
+            if selection == 2:
+                if progress.vel_level < 5 and progress.points > options[selection]["cost"]:
+                    progress.velocity += options[selection]["change"]
+                    progress.points -= options[selection]["cost"]
+                    progress.vel_level += 1
+            if selection == 3:
+                return progress
+        pygame.display.flip()
+        clock.tick(60)
+
 def menu(progress, clock):
     menu = True
     selection = 1
@@ -180,6 +243,7 @@ def menu(progress, clock):
     while menu:
         for even in pygame.event.get():
             if even.type == pygame.QUIT:
+                save(progress)
                 return
 
         screen.fill("blue")
@@ -199,7 +263,7 @@ def menu(progress, clock):
             screen.blit(text, (screen.get_width() / 2, screen.get_height() / 2 + offset))
             offset += 100
 
-        keys = pygame.key.get_pressed()
+        keys = pygame.key.get_just_released()
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if selection > min(options.keys()):
                 selection -= 1
@@ -211,7 +275,8 @@ def menu(progress, clock):
                 score = play(progress, clock)
                 progress.points += score
             if selection == 2:
-                progress = upgrades(progress)
+                progress = upgrades(progress, clock)
+                selection = 1
             if selection == 3:
                 save(progress)
                 return
