@@ -1,7 +1,6 @@
 import pygame
 import random
 import pickle
-import time
 class Enemy:
     def __init__(self):
         self.size = 40
