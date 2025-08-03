@@ -24,12 +24,23 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (screen.get_width() / 2, screen.get_height() / 2)
         self.velocity = progress.velocity
+        self.base_velocity = progress.velocity
         self.score = 0
-
+        self.speed_boost_timer = 0
         self.buff_group = buff_group
+
     def update(self, dt):
+        if self.speed_boost_timer > 0:
+            self.speed_boost_timer -= dt
+            if self.speed_boost_timer <= 0:
+                self.velocity = self.base_velocity
+
         self.move(dt)
         self.check_collisions()
+
+    def speed_boost(self, increase, duration):
+        self.velocity *= increase
+        self.speed_boost_timer += duration
 
     def move(self, dt):
         keys = pygame.key.get_pressed()
@@ -51,6 +62,12 @@ class Player(pygame.sprite.Sprite):
             # Handle collision with buffs
             # Here you can add logic to increase score or apply buffs
             self.score += 1
+            self.speed_boost(1.5, 2)
+
+
+
+
+
 
 class Buff(pygame.sprite.Sprite):
     def __init__(self, color, pos = None):
@@ -64,10 +81,10 @@ class Buff(pygame.sprite.Sprite):
             self.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
         self.velocity = 0
 
-    def update(self):
+    """def update(self):
         self.rect.y += self.velocity
         if self.rect.top > screen.get_height():
-            self.kill()
+            self.kill()"""
 
 class Progress():
     def __init__(self):
@@ -105,9 +122,15 @@ def play(progress: "Progress", clock):
 
     # Create a sprite group for buffs
     buff_group = pygame.sprite.Group()
-    for i in range(10):  # Create 10 green buffs
+    for i in range(0):  # Create x green buffs
         buff_green = Buff("green")
         buff_group.add(buff_green)
+    
+    # Buff spawn timer
+    buff_spawner_timer = 0
+    buff_spawn_intervall_lowerbound = 5
+    buff_spawn_intervall_upperbound = 10
+    buff_spawn_intervall = random.randint(buff_spawn_intervall_lowerbound,buff_spawn_intervall_upperbound)
 
     # Create player group
     player = Player(progress, "black", buff_group)
@@ -121,8 +144,16 @@ def play(progress: "Progress", clock):
                 running = False
         screen.fill("blue")
 
+        buff_spawner_timer += dt
+        if buff_spawner_timer >= buff_spawn_intervall:
+            buff_green = Buff("green")
+            buff_group.add(buff_green)
+            buff_spawner_timer = 0
+            buff_spawn_intervall = random.randint(buff_spawn_intervall_lowerbound,buff_spawn_intervall_upperbound)
+
+
         # Draw and move buffs
-        buff_group.update()
+        #buff_group.update()
         buff_group.draw(screen)
 
         # Draw and move player
