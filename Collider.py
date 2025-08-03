@@ -49,7 +49,6 @@ class Player(pygame.sprite.Sprite):
     def check_collisions(self):
         if pygame.sprite.spritecollide(self, self.buff_group, True):
             # Handle collision with buffs
-            print("Buff collected!")
             # Here you can add logic to increase score or apply buffs
             self.score += 1
 
@@ -82,7 +81,6 @@ class Progress():
 pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
 clock = pygame.time.Clock()
-
 
 def load():
     try:
@@ -164,7 +162,6 @@ def play(progress: "Progress", clock):
                     buff_green = Buff("green", c.pos)
                     buff_group.add(buff_green)
                 enemies.remove(c)
-                
 
         text = font.render(f"Score: {player.score}", False, "white")
         screen.blit(text, (screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
@@ -207,10 +204,8 @@ def upgrades(progress: "Progress", clock):
         offset = 0
         for num, option in options.items():
             if selection == num and num <= 2:
-                print(option)
                 text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.size_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "red")
             elif selection != num and num <= 2:
-                print(option)
                 text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.vel_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "white")
             if selection == num and num > 2:
                 text = font.render(option, False, "red")
@@ -224,9 +219,13 @@ def upgrades(progress: "Progress", clock):
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if selection > min(options.keys()):
                 selection -= 1
+            else:
+                selection = max(options.keys())
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             if selection < max(options.keys()):
                 selection += 1
+            else:
+                selection = min(options.keys())
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
                 if progress.size_level < 5 and progress.points > options[selection]["cost"]:
@@ -274,9 +273,13 @@ def menu(progress, clock):
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if selection > min(options.keys()):
                 selection -= 1
+            else:
+                selection = max(options.keys())
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             if selection < max(options.keys()):
                 selection += 1
+            else:
+                selection = min(options.keys())
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
                 score = play(progress, clock)
