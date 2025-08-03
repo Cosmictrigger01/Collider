@@ -19,6 +19,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, progress: "Progress", color, buff_group):
         super().__init__()
         self.size = progress.size
+        self.base_size = progress.size
         self.image = pygame.Surface((self.size, self.size))
         self.image.fill(color)
         self.rect = self.image.get_rect()
@@ -39,8 +40,13 @@ class Player(pygame.sprite.Sprite):
         self.check_collisions()
 
     def speed_boost(self, increase, duration):
-        self.velocity *= increase
-        self.speed_boost_timer += duration
+        if self.speed_boost_timer > 0:
+            self.speed_boost_timer += duration
+        else:
+            self.velocity *= increase
+            self.speed_boost_timer += duration
+
+    
 
     def move(self, dt):
         keys = pygame.key.get_pressed()
@@ -57,12 +63,13 @@ class Player(pygame.sprite.Sprite):
             if (self.rect.y + self.size) + self.velocity * dt < screen.get_height():
                 self.rect.y += self.velocity * dt
 
+    # Handle collision with buffs
     def check_collisions(self):
-        if pygame.sprite.spritecollide(self, self.buff_group, True):
-            # Handle collision with buffs
-            # Here you can add logic to increase score or apply buffs
-            self.score += 1
-            self.speed_boost(1.5, 2)
+        buff_list = pygame.sprite.spritecollide(self, self.buff_group, True)
+        for i in buff_list:
+            i.apply(self)
+            
+            
 
 
 
@@ -79,12 +86,21 @@ class Buff(pygame.sprite.Sprite):
             self.rect.center = pos
         else:
             self.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
-        self.velocity = 0
+    
+    def apply(self, player):
+        pass
 
-    """def update(self):
-        self.rect.y += self.velocity
-        if self.rect.top > screen.get_height():
-            self.kill()"""
+class SpeedBuff(Buff):
+    def __init__(self, pos = None):
+        super().__init__("green", pos)
+    def apply(self, player):
+        player.speed_boost(1.75, 2)
+
+class ShrinkBuff(Buff):
+    def __init__(self, pos = None):
+        super().__init__("yellow", pos)
+    def apply(self, player):
+        pass
 
 class Progress():
     def __init__(self):
@@ -122,9 +138,7 @@ def play(progress: "Progress", clock):
 
     # Create a sprite group for buffs
     buff_group = pygame.sprite.Group()
-    for i in range(0):  # Create x green buffs
-        buff_green = Buff("green")
-        buff_group.add(buff_green)
+    
     
     # Buff spawn timer
     buff_spawner_timer = 0
@@ -146,14 +160,13 @@ def play(progress: "Progress", clock):
 
         buff_spawner_timer += dt
         if buff_spawner_timer >= buff_spawn_intervall:
-            buff_green = Buff("green")
+            buff_green = SpeedBuff()
             buff_group.add(buff_green)
             buff_spawner_timer = 0
             buff_spawn_intervall = random.randint(buff_spawn_intervall_lowerbound,buff_spawn_intervall_upperbound)
 
 
-        # Draw and move buffs
-        #buff_group.update()
+        # Draw buffs
         buff_group.draw(screen)
 
         # Draw and move player
@@ -190,7 +203,7 @@ def play(progress: "Progress", clock):
             if c in enemies:
                 player.score += c.reward
                 if random.randint(1,10) <= progress.buff_drop_chance * 10:
-                    buff_green = Buff("green", c.pos)
+                    buff_green = SpeedBuff(c.pos)
                     buff_group.add(buff_green)
                 enemies.remove(c)
 
