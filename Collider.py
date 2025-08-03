@@ -193,20 +193,22 @@ def upgrades(progress: "Progress", clock):
         options = {1: {"text": "Reduce Size",
                        "cost": 100,
                        "change": 10,
-                       "max_level": 5},
+                       "max_level": 5,
+                       "curr_level": progress.size_level},
                    2: {"text": "Increase Speed",
                        "cost": 100,
                        "change": 25,
-                       "max_level": 5},
+                       "max_level": 5,
+                       "curr_level": progress.vel_level},
                    3: "Exit",
                    4: f"Points: {progress.points}"}
         
         offset = 0
         for num, option in options.items():
             if selection == num and num <= 2:
-                text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.size_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "red")
+                text = font.render(f"{option['text']} by {option['change']}, Current Level: {option['curr_level']}(Max: {option['max_level']}), Cost: {option['cost']}", False, "red")
             elif selection != num and num <= 2:
-                text = font.render(f"{option['text']} by {option['change']}, Current Level: {progress.vel_level}(Max: {option['max_level']}), Cost: {option['cost']}", False, "white")
+                text = font.render(f"{option['text']} by {option['change']}, Current Level: {option['curr_level']}(Max: {option['max_level']}), Cost: {option['cost']}", False, "white")
             if selection == num and num > 2:
                 text = font.render(option, False, "red")
             elif selection != num and num > 2:
