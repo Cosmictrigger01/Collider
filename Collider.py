@@ -54,12 +54,15 @@ class Player(pygame.sprite.Sprite):
             self.score += 1
 
 class Buff(pygame.sprite.Sprite):
-    def __init__(self, color):
+    def __init__(self, color, pos = None):
         super().__init__()
         self.image = pygame.Surface((20, 20))
         self.image.fill(color)
         self.rect = self.image.get_rect()
-        self.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
+        if pos:
+            self.rect.center = pos
+        else:
+            self.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
         self.velocity = 0
 
     def update(self):
@@ -74,6 +77,7 @@ class Progress():
         self.size_level = 0
         self.velocity = 300
         self.vel_level = 0
+        self.buff_drop_chance = 0.2 #(0.2 = 20%)
 
 pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
@@ -93,7 +97,7 @@ def save(progress):
     with open("progress.pkl", "wb") as outfile:
         pickle.dump(progress, outfile)
 
-def play(progress, clock):
+def play(progress: "Progress", clock):
     running = True
     enemies = [Enemy()]
     enemy_spawn_rate = 100 # lower is faster
@@ -156,7 +160,11 @@ def play(progress, clock):
         for c in colliders:
             if c in enemies:
                 player.score += c.reward
+                if random.randint(1,10) <= progress.buff_drop_chance * 10:
+                    buff_green = Buff("green", c.pos)
+                    buff_group.add(buff_green)
                 enemies.remove(c)
+                
 
         text = font.render(f"Score: {player.score}", False, "white")
         screen.blit(text, (screen.get_width() / 100 * 90, screen.get_height() / 100 * 90))
