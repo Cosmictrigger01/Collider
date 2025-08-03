@@ -1,106 +1,11 @@
 import pygame
 import random
 import pickle
-class Enemy:
-    def __init__(self):
-        self.size = 40
-        self.pos = pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
-        self.hitbox = pygame.Rect(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
-        self.reward = 1
-        self.color = "red"
 
-    def draw(self):
-        pygame.draw.rect(screen, self.color, self.hitbox, self.size)
+from enemy import Enemy
+from player import Player    
+from buff import Buff, SpeedBuff, ShrinkBuff
 
-    def move_hitbox(self):
-        self.hitbox.update(self.pos.x - self.size, self.pos.y - self.size, self.size * 2, self.size * 2)
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, progress: "Progress", color, buff_group):
-        super().__init__()
-        self.size = progress.size
-        self.base_size = progress.size
-        self.image = pygame.Surface((self.size, self.size))
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.rect.center = (screen.get_width() / 2, screen.get_height() / 2)
-        self.velocity = progress.velocity
-        self.base_velocity = progress.velocity
-        self.score = 0
-        self.speed_boost_timer = 0
-        self.buff_group = buff_group
-
-    def update(self, dt):
-        if self.speed_boost_timer > 0:
-            self.speed_boost_timer -= dt
-            if self.speed_boost_timer <= 0:
-                self.velocity = self.base_velocity
-
-        self.move(dt)
-        self.check_collisions()
-
-    def speed_boost(self, increase, duration):
-        if self.speed_boost_timer > 0:
-            self.speed_boost_timer += duration
-        else:
-            self.velocity *= increase
-            self.speed_boost_timer += duration
-
-    
-
-    def move(self, dt):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            if (self.rect.x) - self.velocity * dt > 0:
-                self.rect.x -= self.velocity * dt
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            if (self.rect.x + self.size) + self.velocity * dt < screen.get_width():
-                self.rect.x += self.velocity * dt
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            if (self.rect.y) - self.velocity * dt > 0:
-                self.rect.y -= self.velocity * dt
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            if (self.rect.y + self.size) + self.velocity * dt < screen.get_height():
-                self.rect.y += self.velocity * dt
-
-    # Handle collision with buffs
-    def check_collisions(self):
-        buff_list = pygame.sprite.spritecollide(self, self.buff_group, True)
-        for i in buff_list:
-            i.apply(self)
-            
-            
-
-
-
-
-
-
-class Buff(pygame.sprite.Sprite):
-    def __init__(self, color, pos = None):
-        super().__init__()
-        self.image = pygame.Surface((20, 20))
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        if pos:
-            self.rect.center = pos
-        else:
-            self.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
-    
-    def apply(self, player):
-        pass
-
-class SpeedBuff(Buff):
-    def __init__(self, pos = None):
-        super().__init__("green", pos)
-    def apply(self, player):
-        player.speed_boost(1.75, 2)
-
-class ShrinkBuff(Buff):
-    def __init__(self, pos = None):
-        super().__init__("yellow", pos)
-    def apply(self, player):
-        pass
 
 class Progress():
     def __init__(self):
