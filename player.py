@@ -1,9 +1,10 @@
 import pygame
-screen = pygame.display.set_mode((1920, 1080))
+
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, progress: "Progress", color, buff_group):
+    def __init__(self, screen, progress, color, buff_group):
         super().__init__()
+        self.screen = screen
         self.size = progress.size
         self.base_size = progress.size
         self.image = pygame.Surface((self.size, self.size))
@@ -38,13 +39,13 @@ class Player(pygame.sprite.Sprite):
             if (self.rect.x) - self.velocity * dt > 0:
                 self.rect.x -= self.velocity * dt
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            if (self.rect.x + self.size) + self.velocity * dt < screen.get_width():
+            if (self.rect.x + self.size) + self.velocity * dt < self.screen.get_width():
                 self.rect.x += self.velocity * dt
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             if (self.rect.y) - self.velocity * dt > 0:
                 self.rect.y -= self.velocity * dt
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            if (self.rect.y + self.size) + self.velocity * dt < screen.get_height():
+            if (self.rect.y + self.size) + self.velocity * dt < self.screen.get_height():
                 self.rect.y += self.velocity * dt
 
     # Handle collision with buffs

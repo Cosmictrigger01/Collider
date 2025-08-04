@@ -33,9 +33,9 @@ def save(progress):
     with open("progress.pkl", "wb") as outfile:
         pickle.dump(progress, outfile)
 
-def play(progress: "Progress", clock):
+def play( progress: "Progress", screen, clock):
     running = True
-    enemies = [Enemy()]
+    enemies = [Enemy(screen)]
     enemy_spawn_rate = 100 # lower is faster
     timer = 0
     dt = 0
@@ -52,7 +52,7 @@ def play(progress: "Progress", clock):
     buff_spawn_intervall = random.randint(buff_spawn_intervall_lowerbound,buff_spawn_intervall_upperbound)
 
     # Create player group
-    player = Player(progress, "black", buff_group)
+    player = Player(screen, progress, "black", buff_group)
     player_group = pygame.sprite.Group()
     player_group.add(player)
 
@@ -65,7 +65,7 @@ def play(progress: "Progress", clock):
 
         buff_spawner_timer += dt
         if buff_spawner_timer >= buff_spawn_intervall:
-            buff_green = SpeedBuff()
+            buff_green = SpeedBuff(screen)
             buff_group.add(buff_green)
             buff_spawner_timer = 0
             buff_spawn_intervall = random.randint(buff_spawn_intervall_lowerbound,buff_spawn_intervall_upperbound)
@@ -77,6 +77,7 @@ def play(progress: "Progress", clock):
         # Draw and move player
         player_group.update(dt)
         player_group.draw(screen)
+        
 
         for e in enemies:
             e.move_hitbox()
@@ -108,7 +109,7 @@ def play(progress: "Progress", clock):
             if c in enemies:
                 player.score += c.reward
                 if random.randint(1,10) <= progress.buff_drop_chance * 10:
-                    buff_green = SpeedBuff(c.pos)
+                    buff_green = SpeedBuff(screen, c.pos)
                     buff_group.add(buff_green)
                 enemies.remove(c)
 
@@ -117,18 +118,18 @@ def play(progress: "Progress", clock):
         pygame.display.flip()
         timer += 1
         if timer % enemy_spawn_rate == 0:
-            enemies.append(Enemy())
-            while enemies[-1].hitbox.colliderect(player.rect) or enemies[-1].hitbox.collidelist(
-                    [x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
+            enemies.append(Enemy(screen))
+            player_greater_area_rect = player.rect.inflate(160, 160)
+            while enemies[-1].hitbox.colliderect(player_greater_area_rect) or enemies[-1].hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
-                enemies.append(Enemy())
+                enemies.append(Enemy(screen))
             if player.score % 5 == 0 and enemy_spawn_rate > 10:
                 enemy_spawn_rate -= 1
 
         dt = clock.tick(60) / 1000
     return player.score
 
-def upgrades(progress: "Progress", clock):
+def upgrades(progress: "Progress", screen, clock):
     upgrades_menu = True
     selection = 1
     font = pygame.font.Font(None, 40)
@@ -193,7 +194,7 @@ def upgrades(progress: "Progress", clock):
         pygame.display.flip()
         clock.tick(60)
 
-def menu(progress, clock):
+def menu(progress, screen, clock):
     menu = True
     selection = 1
     font = pygame.font.Font(None, 40)
@@ -233,10 +234,10 @@ def menu(progress, clock):
                 selection = min(options.keys())
         if keys[pygame.K_KP_ENTER] or keys[pygame.K_RETURN]:
             if selection == 1:
-                score = play(progress, clock)
+                score = play(progress, screen, clock)
                 progress.points += score
             if selection == 2:
-                progress = upgrades(progress, clock)
+                progress = upgrades(progress, screen, clock)
                 selection = 1
             if selection == 3:
                 save(progress)
@@ -245,5 +246,5 @@ def menu(progress, clock):
         pygame.display.flip()
         clock.tick(60)
 
-menu(load(), clock)
+menu(load(), screen, clock)
 pygame.quit()
