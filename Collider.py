@@ -119,7 +119,7 @@ def play( progress: "Progress", screen, clock):
         timer += 1
         if timer % enemy_spawn_rate == 0:
             enemies.append(Enemy(screen))
-            player_greater_area_rect = player.rect.inflate(160, 160)
+            player_greater_area_rect = player.rect.inflate(240 - player.size, 240 - player.size)
             while enemies[-1].hitbox.colliderect(player_greater_area_rect) or enemies[-1].hitbox.collidelist([x.hitbox for x in enemies if x.hitbox != e.hitbox]) == -1:
                 enemies.pop()
                 enemies.append(Enemy(screen))
